@@ -1,0 +1,12 @@
+{
+  "name": "@forma/plan-generator",
+  "version": "0.0.1",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@forma/shared-types": "workspace:*"
+  },
+  "license": "ISC",
+  "packageManager": "pnpm@10.26.0"
+}
