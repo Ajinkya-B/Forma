@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Alert } from "react-native";
 import { useRouter, Stack } from "expo-router";
 import { colors } from "../theme/colors";
 import { spacing } from "../theme/spacing";
@@ -7,9 +7,11 @@ import { Button } from "../components/Button";
 import { Input } from "../components/Input";
 import { Screen } from "../components/Screen";
 import { ThemedText } from "../components/ThemedText";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { login, isAuthenticated } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,13 +21,20 @@ export default function LoginScreen() {
   const [passwordError, setPasswordError] = useState("");
   const [isFormValid, setIsFormValid] = useState(false);
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/dashboard");
+    }
+  }, [isAuthenticated]);
+
   useEffect(() => {
     // Simple validation check
     const isValidEmail = email.includes("@") && email.length > 5;
     const isValidPassword = password.length >= 6;
     setIsFormValid(isValidEmail && isValidPassword);
     
-    // Clear errors when typing (optional improvement)
+    // Clear errors when typing
     if (isValidEmail) setEmailError("");
     if (isValidPassword) setPasswordError("");
   }, [email, password]);
@@ -43,15 +52,18 @@ export default function LoginScreen() {
     return valid;
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!validate()) return;
     
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await login({ email, password });
+      // Navigation will happen automatically via useEffect
+    } catch (error) {
+      Alert.alert("Login Failed", "Invalid credentials. Please try again.");
+    } finally {
       setLoading(false);
-      router.replace("/dashboard");
-    }, 1200);
+    }
   };
 
   const handleGoToSignup = () => {
