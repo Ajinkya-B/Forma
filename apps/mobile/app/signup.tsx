@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Alert } from "react-native";
 import { useRouter, Stack } from "expo-router";
 import { colors } from "../theme/colors";
 import { spacing } from "../theme/spacing";
@@ -7,9 +7,11 @@ import { Button } from "../components/Button";
 import { Input } from "../components/Input";
 import { Screen } from "../components/Screen";
 import { ThemedText } from "../components/ThemedText";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function SignupScreen() {
   const router = useRouter();
+  const { signup, isAuthenticated } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,6 +20,13 @@ export default function SignupScreen() {
   // Validation
   const [errors, setErrors] = useState({ name: "", email: "", password: "" });
   const [isFormValid, setIsFormValid] = useState(false);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/dashboard");
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const isValidName = name.trim().length > 1;
@@ -31,7 +40,7 @@ export default function SignupScreen() {
     if (isValidPassword) setErrors(e => ({ ...e, password: "" }));
   }, [name, email, password]);
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     if (!isFormValid) {
       setErrors({
         name: name.trim().length <= 1 ? "Name is required" : "",
@@ -42,10 +51,14 @@ export default function SignupScreen() {
     }
 
     setLoading(true);
-    setTimeout(() => {
+    try {
+      await signup({ name, email, password });
+      // Navigation will happen automatically via useEffect
+    } catch (error) {
+      Alert.alert("Signup Failed", "Could not create account. Please try again.");
+    } finally {
       setLoading(false);
-      router.replace("/dashboard");
-    }, 1500);
+    }
   };
 
   const handleGoToLogin = () => {
