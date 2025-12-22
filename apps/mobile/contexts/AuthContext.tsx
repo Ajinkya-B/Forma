@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { User, AuthTokens, LoginCredentials, SignupCredentials, AuthResponse } from '@forma/shared-types';
+import { User, AuthTokens, LoginCredentials, SignupCredentials } from '@forma/shared-types';
 import { storage } from '../lib/storage';
+import { api } from '../lib/api';
 
 interface AuthContextType {
   user: User | null;
@@ -45,32 +46,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (credentials: LoginCredentials) => {
     try {
-      // TODO: Replace with actual API call
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockResponse: AuthResponse = {
-        user: {
-          id: '1',
-          email: credentials.email,
-          name: 'Alex Johnson',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        tokens: {
-          accessToken: 'mock-access-token',
-          refreshToken: 'mock-refresh-token',
-        },
-      };
+      const response = await api.login(credentials);
 
       // Persist to storage
       await Promise.all([
-        storage.setUser(mockResponse.user),
-        storage.setTokens(mockResponse.tokens),
+        storage.setUser(response.user),
+        storage.setTokens(response.tokens),
       ]);
 
-      setUser(mockResponse.user);
-      setTokens(mockResponse.tokens);
+      setUser(response.user);
+      setTokens(response.tokens);
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -79,30 +64,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signup = useCallback(async (credentials: SignupCredentials) => {
     try {
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const mockResponse: AuthResponse = {
-        user: {
-          id: '1',
-          email: credentials.email,
-          name: credentials.name,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        tokens: {
-          accessToken: 'mock-access-token',
-          refreshToken: 'mock-refresh-token',
-        },
-      };
+      const response = await api.signup(credentials);
 
       await Promise.all([
-        storage.setUser(mockResponse.user),
-        storage.setTokens(mockResponse.tokens),
+        storage.setUser(response.user),
+        storage.setTokens(response.tokens),
       ]);
 
-      setUser(mockResponse.user);
-      setTokens(mockResponse.tokens);
+      setUser(response.user);
+      setTokens(response.tokens);
     } catch (error) {
       console.error('Signup error:', error);
       throw error;
