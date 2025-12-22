@@ -44,8 +44,8 @@ export default function DashboardScreen() {
   // Get today's workout (first workout in active plan)
   const todaysWorkout = activePlan?.workouts[0];
   
-  // Calculate progress percentage (mock - would come from actual completion data)
-  const workoutProgress = 80;
+  // Use progress from API (defaults to 0 if not set)
+  const workoutProgress = todaysWorkout?.progressPercentage || 0;
 
   return (
     <Screen preset="scroll" contentContainerStyle={styles.container} backgroundColor={colors.surface}>

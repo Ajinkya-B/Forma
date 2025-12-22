@@ -17,6 +17,7 @@ export interface Workout {
   exercises: Exercise[];
   category?: string;
   tags?: string[];
+  progressPercentage?: number; // 0-100, calculated based on current session
 }
 
 export interface WorkoutPlan {
@@ -27,6 +28,15 @@ export interface WorkoutPlan {
   workouts: Workout[];
   startDate: Date;
   endDate?: Date;
+  isActive: boolean;
+}
+
+export interface WorkoutSession {
+  id: string;
+  userId: string;
+  workoutId: string;
+  startedAt: Date;
+  completedExercises: string[]; // Array of exercise IDs
   isActive: boolean;
 }
 

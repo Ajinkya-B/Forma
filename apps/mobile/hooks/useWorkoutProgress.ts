@@ -1,61 +1,33 @@
 import { useState, useEffect } from 'react';
 import { WorkoutProgress } from '@forma/shared-types';
 import { useAuth } from '../contexts/AuthContext';
-
-// Mock progress data
-const mockProgress: WorkoutProgress[] = [
-  {
-    id: 'p1',
-    userId: '1',
-    workoutId: '1',
-    completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    duration: 42,
-    notes: 'Great session!',
-  },
-  {
-    id: 'p2',
-    userId: '1',
-    workoutId: '2',
-    completedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-    duration: 22,
-  },
-];
+import { api } from '../lib/api';
 
 export function useWorkoutProgress(workoutId?: string) {
-  const { user, isAuthenticated } = useAuth();
+  const { user, tokens, isAuthenticated } = useAuth();
   const [progress, setProgress] = useState<WorkoutProgress[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated || !user) {
+    if (!isAuthenticated || !user || !tokens) {
       setProgress([]);
       setIsLoading(false);
       return;
     }
 
     fetchProgress();
-  }, [user, isAuthenticated, workoutId]);
+  }, [user, tokens, isAuthenticated, workoutId]);
 
   const fetchProgress = async () => {
+    if (!user || !tokens) return;
+    
     setIsLoading(true);
     setError(null);
 
     try {
-      // TODO: Replace with actual API call
-      // const url = workoutId 
-      //   ? `/api/users/${user.id}/progress?workoutId=${workoutId}`
-      //   : `/api/users/${user.id}/progress`;
-      // const response = await fetch(url);
-      // const data = await response.json();
-      
-      await new Promise(resolve => setTimeout(resolve, 400));
-      
-      const filteredProgress = workoutId
-        ? mockProgress.filter(p => p.workoutId === workoutId)
-        : mockProgress;
-      
-      setProgress(filteredProgress);
+      const data = await api.getWorkoutProgress(user.id, tokens.accessToken, workoutId);
+      setProgress(data);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch progress'));
       console.error('Error fetching workout progress:', err);
@@ -65,20 +37,16 @@ export function useWorkoutProgress(workoutId?: string) {
   };
 
   const logWorkout = async (workoutProgress: Omit<WorkoutProgress, 'id' | 'userId'>) => {
+    if (!user || !tokens) {
+      throw new Error('User not authenticated');
+    }
+
     try {
-      // TODO: Replace with actual API call
-      // await fetch(`/api/users/${user.id}/progress`, {
-      //   method: 'POST',
-      //   body: JSON.stringify(workoutProgress),
-      // });
+      const newProgress = await api.logWorkout(user.id, tokens.accessToken, workoutProgress);
       
-      const newProgress: WorkoutProgress = {
-        ...workoutProgress,
-        id: `p${Date.now()}`,
-        userId: user!.id,
-      };
-      
+      // Optimistically update local state
       setProgress(prev => [newProgress, ...prev]);
+      
       return newProgress;
     } catch (err) {
       console.error('Error logging workout:', err);
